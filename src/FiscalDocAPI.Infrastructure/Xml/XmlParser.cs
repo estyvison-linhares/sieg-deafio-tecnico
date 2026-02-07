@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
@@ -27,15 +28,15 @@ public class XmlParser : IXmlParser
             var root = xdoc.Root;
 
             string docType;
-            if (root?.Name.LocalName == "nfeProc" || root?.Descendants().Any(e => e.Name.LocalName == "NFe") == true)
+            if (root?.Name.LocalName == "nfeProc" || root?.Name.LocalName == "NFe" || root?.Descendants().Any(e => e.Name.LocalName == "NFe") == true)
             {
                 docType = "NFe";
             }
-            else if (root?.Name.LocalName == "cteProc" || root?.Descendants().Any(e => e.Name.LocalName == "CTe") == true)
+            else if (root?.Name.LocalName == "cteProc" || root?.Name.LocalName == "CTe" || root?.Descendants().Any(e => e.Name.LocalName == "CTe") == true)
             {
                 docType = "CTe";
             }
-            else if (root?.Descendants().Any(e => e.Name.LocalName == "infNfse") == true)
+            else if (root?.Name.LocalName == "infNfse" || root?.Descendants().Any(e => e.Name.LocalName == "infNfse") == true)
             {
                 docType = "NFSe";
             }
@@ -126,7 +127,7 @@ public class XmlParser : IXmlParser
                    xdoc.Descendants().FirstOrDefault(e => e.Name.LocalName == "ValorServicos")?.Value ??
                    "0";
         
-        return decimal.TryParse(total, out var value) ? value : 0;
+        return decimal.TryParse(total, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) ? value : 0;
     }
 
     private static DateTime ExtractIssueDate(XDocument xdoc, string docType)
