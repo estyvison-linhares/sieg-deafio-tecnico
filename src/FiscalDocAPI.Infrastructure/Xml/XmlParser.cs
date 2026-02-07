@@ -42,7 +42,7 @@ public class XmlParser : IXmlParser
             }
             else
             {
-                throw new InvalidOperationException("Tipo de documento fiscal não reconhecido");
+                throw new InvalidOperationException("Unrecognized fiscal document type");
             }
 
             var documentKey = ExtractDocumentKey(xdoc, docType);
@@ -66,8 +66,8 @@ public class XmlParser : IXmlParser
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao processar XML");
-            throw new InvalidOperationException($"Erro ao processar XML: {ex.Message}", ex);
+            _logger.LogError(ex, "Error processing XML");
+            throw new InvalidOperationException($"Error processing XML: {ex.Message}", ex);
         }
     }
 

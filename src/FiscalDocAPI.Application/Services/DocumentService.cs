@@ -105,7 +105,7 @@ public class DocumentService : IDocumentService
         return new UploadXmlResponse
         {
             DocumentId = documentId,
-            Message = "Documento já existente (idempotência)",
+            Message = "Document already exists (idempotency)",
             IsNewDocument = false
         };
     }
@@ -115,7 +115,7 @@ public class DocumentService : IDocumentService
         return new UploadXmlResponse
         {
             DocumentId = documentId,
-            Message = "Documento processado com sucesso",
+            Message = "Document processed successfully",
             IsNewDocument = true
         };
     }

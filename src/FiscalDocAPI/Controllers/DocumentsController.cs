@@ -21,12 +21,12 @@ public class DocumentsController(
   {
     if (xmlFile == null || xmlFile.Length == 0)
     {
-      return BadRequest(new { error = "Arquivo XML não fornecido ou vazio" });
+      return BadRequest(new { error = "XML file not provided or empty" });
     }
 
     if (!xmlFile.FileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
     {
-      return BadRequest(new { error = "Arquivo deve ser do tipo XML" });
+      return BadRequest(new { error = "File must be of type XML" });
     }
 
     try
@@ -37,8 +37,8 @@ public class DocumentsController(
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Erro ao processar XML");
-      return BadRequest(new { error = $"Erro ao processar XML: {ex.Message}" });
+      _logger.LogError(ex, "Error processing XML");
+      return BadRequest(new { error = $"Error processing XML: {ex.Message}" });
     }
   }
 
@@ -77,7 +77,7 @@ public class DocumentsController(
 
     if (document == null)
     {
-      return NotFound(new { error = "Documento não encontrado" });
+      return NotFound(new { error = "Document not found" });
     }
 
     return Ok(document);
@@ -92,10 +92,10 @@ public class DocumentsController(
 
     if (!success)
     {
-      return NotFound(new { error = "Documento não encontrado" });
+      return NotFound(new { error = "Document not found" });
     }
 
-    return Ok(new { message = "Documento atualizado com sucesso" });
+    return Ok(new { message = "Document updated successfully" });
   }
 
   [HttpDelete("{id}")]
@@ -107,9 +107,9 @@ public class DocumentsController(
 
     if (!success)
     {
-      return NotFound(new { error = "Documento não encontrado" });
+      return NotFound(new { error = "Document not found" });
     }
 
-    return Ok(new { message = "Documento excluído com sucesso" });
+    return Ok(new { message = "Document deleted successfully" });
   }
 }
