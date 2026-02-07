@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompNfse xmlns="http://www.abrasf.org.br/nfse.xsd">
+    <Nfse versao="2.02">
+        <InfNfse Id="NFSE123456">
+            <Numero>123456</Numero>
+            <CodigoVerificacao>ABCD-1234</CodigoVerificacao>
+            <DataEmissao>2024-01-15T10:30:00</DataEmissao>
+            <IdentificacaoRps>
+                <Numero>1001</Numero>
+                <Serie>A</Serie>
+                <Tipo>1</Tipo>
+            </IdentificacaoRps>
+            <DataEmissaoRps>2024-01-15T10:00:00</DataEmissaoRps>
+            <NaturezaOperacao>1</NaturezaOperacao>
+            <OptanteSimplesNacional>1</OptanteSimplesNacional>
+            <IncentivadorCultural>2</IncentivadorCultural>
+            <Competencia>2024-01-15T00:00:00</Competencia>
+            <Servico>
+                <Valores>
+                    <ValorServicos>2500.00</ValorServicos>
+                    <ValorDeducoes>0.00</ValorDeducoes>
+                    <ValorPis>0.00</ValorPis>
+                    <ValorCofins>0.00</ValorCofins>
+                    <ValorInss>0.00</ValorInss>
+                    <ValorIr>0.00</ValorIr>
+                    <ValorCsll>0.00</ValorCsll>
+                    <IssRetido>2</IssRetido>
+                    <ValorIss>125.00</ValorIss>
+                    <ValorIssRetido>0.00</ValorIssRetido>
+                    <OutrasRetencoes>0.00</OutrasRetencoes>
+                    <BaseCalculo>2500.00</BaseCalculo>
+                    <Aliquota>0.05</Aliquota>
+                    <ValorLiquidoNfse>2500.00</ValorLiquidoNfse>
+                    <DescontoIncondicionado>0.00</DescontoIncondicionado>
+                    <DescontoCondicionado>0.00</DescontoCondicionado>
+                </Valores>
+                <ItemListaServico>0107</ItemListaServico>
+                <CodigoTributacaoMunicipio>010700001</CodigoTributacaoMunicipio>
+                <Discriminacao>SERVICOS DE CONSULTORIA EM TECNOLOGIA DA INFORMACAO
+Periodo: 01/01/2024 a 31/01/2024
+Descricao detalhada dos servicos prestados conforme contrato numero 2024/001.
+                </Discriminacao>
+                <CodigoMunicipio>3550308</CodigoMunicipio>
+            </Servico>
+            <PrestadorServico>
+                <IdentificacaoPrestador>
+                    <Cnpj>12345678000190</Cnpj>
+                    <InscricaoMunicipal>123456789</InscricaoMunicipal>
+                </IdentificacaoPrestador>
+                <RazaoSocial>EMPRESA DE SERVICOS DE TI LTDA</RazaoSocial>
+                <NomeFantasia>TI SERVICOS</NomeFantasia>
+                <Endereco>
+                    <Endereco>RUA DA TECNOLOGIA</Endereco>
+                    <Numero>100</Numero>
+                    <Complemento>SALA 5</Complemento>
+                    <Bairro>CENTRO</Bairro>
+                    <CodigoMunicipio>3550308</CodigoMunicipio>
+                    <Uf>SP</Uf>
+                    <Cep>01000000</Cep>
+                </Endereco>
+                <Contato>
+                    <Telefone>1130001000</Telefone>
+                    <Email>contato@tiservicos.com.br</Email>
+                </Contato>
+            </PrestadorServico>
+            <TomadorServico>
+                <IdentificacaoTomador>
+                    <CpfCnpj>
+                        <Cnpj>98765432000100</Cnpj>
+                    </CpfCnpj>
+                    <InscricaoMunicipal>987654321</InscricaoMunicipal>
+                </IdentificacaoTomador>
+                <RazaoSocial>CLIENTE CORPORATIVO LTDA</RazaoSocial>
+                <Endereco>
+                    <Endereco>AV CLIENTE</Endereco>
+                    <Numero>500</Numero>
+                    <Complemento>ANDAR 10</Complemento>
+                    <Bairro>VILA MARIANA</Bairro>
+                    <CodigoMunicipio>3550308</CodigoMunicipio>
+                    <Uf>SP</Uf>
+                    <Cep>04000000</Cep>
+                </Endereco>
+                <Contato>
+                    <Telefone>1140002000</Telefone>
+                    <Email>contato@clientecorp.com.br</Email>
+                </Contato>
+            </TomadorServico>
+            <OrgaoGerador>
+                <CodigoMunicipio>3550308</CodigoMunicipio>
+                <Uf>SP</Uf>
+            </OrgaoGerador>
+        </InfNfse>
+    </Nfse>
+</CompNfse>

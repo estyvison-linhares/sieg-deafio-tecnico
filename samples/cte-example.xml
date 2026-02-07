@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cteProc xmlns="http://www.portalfiscal.inf.br/cte" versao="3.00">
+    <CTe>
+        <infCte Id="CTe35240112345678000190570010000000121234567890" versao="3.00">
+            <ide>
+                <cUF>35</cUF>
+                <cCT>12345678</cCT>
+                <CFOP>5353</CFOP>
+                <natOp>PRESTACAO DE SERVICO DE TRANSPORTE</natOp>
+                <mod>57</mod>
+                <serie>1</serie>
+                <nCT>12</nCT>
+                <dhEmi>2024-01-15T09:00:00-03:00</dhEmi>
+                <tpImp>1</tpImp>
+                <tpEmis>1</tpEmis>
+                <cDV>9</cDV>
+                <tpAmb>2</tpAmb>
+                <tpCTe>0</tpCTe>
+                <procEmi>0</procEmi>
+                <verProc>1.0</verProc>
+                <cMunEnv>3550308</cMunEnv>
+                <xMunEnv>SAO PAULO</xMunEnv>
+                <UFEnv>SP</UFEnv>
+                <modal>01</modal>
+                <tpServ>0</tpServ>
+                <cMunIni>3550308</cMunIni>
+                <xMunIni>SAO PAULO</xMunIni>
+                <UFIni>SP</UFIni>
+                <cMunFim>3304557</cMunFim>
+                <xMunFim>RIO DE JANEIRO</xMunFim>
+                <UFFim>RJ</UFFim>
+            </ide>
+            <emit>
+                <CNPJ>12345678000190</CNPJ>
+                <xNome>TRANSPORTADORA TESTE LTDA</xNome>
+                <xFant>TRANS TESTE</xFant>
+                <enderEmit>
+                    <xLgr>RUA DO TRANSPORTE</xLgr>
+                    <nro>500</nro>
+                    <xBairro>INDUSTRIAL</xBairro>
+                    <cMun>3550308</cMun>
+                    <xMun>SAO PAULO</xMun>
+                    <CEP>03000000</CEP>
+                    <UF>SP</UF>
+                    <fone>1135001000</fone>
+                </enderEmit>
+                <IE>123456789</IE>
+            </emit>
+            <rem>
+                <CNPJ>11111111000100</CNPJ>
+                <xNome>REMETENTE TESTE</xNome>
+                <fone>1130001000</fone>
+                <enderReme>
+                    <xLgr>AV TESTE</xLgr>
+                    <nro>100</nro>
+                    <xBairro>CENTRO</xBairro>
+                    <cMun>3550308</cMun>
+                    <xMun>SAO PAULO</xMun>
+                    <CEP>01000000</CEP>
+                    <UF>SP</UF>
+                    <cPais>1058</cPais>
+                    <xPais>BRASIL</xPais>
+                </enderReme>
+                <IE>111111111</IE>
+            </rem>
+            <dest>
+                <CNPJ>22222222000100</CNPJ>
+                <xNome>DESTINATARIO TESTE</xNome>
+                <fone>2140002000</fone>
+                <enderDest>
+                    <xLgr>RUA DESTINO</xLgr>
+                    <nro>200</nro>
+                    <xBairro>COPACABANA</xBairro>
+                    <cMun>3304557</cMun>
+                    <xMun>RIO DE JANEIRO</xMun>
+                    <CEP>22000000</CEP>
+                    <UF>RJ</UF>
+                    <cPais>1058</cPais>
+                    <xPais>BRASIL</xPais>
+                </enderDest>
+                <IE>222222222</IE>
+            </dest>
+            <vPrest>
+                <vTPrest>850.00</vTPrest>
+                <vRec>850.00</vRec>
+                <Comp>
+                    <xNome>FRETE PESO</xNome>
+                    <vComp>850.00</vComp>
+                </Comp>
+            </vPrest>
+            <imp>
+                <ICMS>
+                    <ICMS00>
+                        <CST>00</CST>
+                        <vBC>850.00</vBC>
+                        <pICMS>12.00</pICMS>
+                        <vICMS>102.00</vICMS>
+                    </ICMS00>
+                </ICMS>
+            </imp>
+            <infCTeNorm>
+                <infCarga>
+                    <vCarga>5000.00</vCarga>
+                    <proPred>DIVERSOS</proPred>
+                    <infQ>
+                        <cUnid>01</cUnid>
+                        <tpMed>PESO BRUTO</tpMed>
+                        <qCarga>1000.0000</qCarga>
+                    </infQ>
+                </infCarga>
+                <infDoc>
+                    <infNFe>
+                        <chave>35240111111111000100550010000001001234567890</chave>
+                    </infNFe>
+                </infDoc>
+            </infCTeNorm>
+        </infCte>
+    </CTe>
+</cteProc>
