@@ -56,8 +56,8 @@ public class DocumentServiceTests
         "12345678000195",
         "Empresa Teste",
         "SP",
-        null,
-        null,
+        string.Empty,
+        string.Empty,
         1500.00m,
         DateTime.Parse("2023-03-15"),
         encryptedXml,
@@ -105,8 +105,8 @@ public class DocumentServiceTests
         "12345678000195",
         "Empresa Teste",
         "SP",
-        null,
-        null,
+        string.Empty,
+        string.Empty,
         1500.00m,
         DateTime.Parse("2023-03-15"),
         "encrypted",
@@ -146,8 +146,8 @@ public class DocumentServiceTests
         "12345678000195",
         "Empresa Teste",
         "SP",
-        null,
-        null,
+        string.Empty,
+        string.Empty,
         1500.00m,
         DateTime.Parse("2023-03-15"),
         encryptedXml,
@@ -160,8 +160,8 @@ public class DocumentServiceTests
         "12345678000195",
         "Empresa Teste",
         "SP",
-        null,
-        null,
+        string.Empty,
+        string.Empty,
         1500.00m,
         DateTime.Parse("2023-03-15"),
         "old_encrypted",
@@ -194,8 +194,8 @@ public class DocumentServiceTests
     // Arrange
     var documents = new List<FiscalDocument>
         {
-            FiscalDocument.Create("NFe", "key1", "12345678000195", "Empresa 1", "SP", null, null, 1000m, DateTime.Now, "enc1", "hash1"),
-            FiscalDocument.Create("CTe", "key2", "98765432000198", "Empresa 2", "RJ", null, null, 2000m, DateTime.Now, "enc2", "hash2")
+            FiscalDocument.Create("NFe", "key1", "12345678000195", "Empresa 1", "SP", string.Empty, string.Empty, 1000m, DateTime.Now, "enc1", "hash1"),
+            FiscalDocument.Create("CTe", "key2", "98765432000198", "Empresa 2", "RJ", string.Empty, string.Empty, 2000m, DateTime.Now, "enc2", "hash2")
         };
 
     var request = new DocumentListRequest
@@ -224,7 +224,7 @@ public class DocumentServiceTests
   public async Task GetDocumentsAsync_WithFilters_ShouldApplyFilters()
   {
     // Arrange
-    var document = FiscalDocument.Create("NFe", "key1", "12345678000195", "Empresa 1", "SP", null, null, 1000m, DateTime.Now, "enc1", "hash1");
+    var document = FiscalDocument.Create("NFe", "key1", "12345678000195", "Empresa 1", "SP", string.Empty, string.Empty, 1000m, DateTime.Now, "enc1", "hash1");
 
     var request = new DocumentListRequest
     {
@@ -308,8 +308,8 @@ public class DocumentServiceTests
         "12345678000195",
         "Empresa Teste",
         "SP",
-        null,
-        null,
+        string.Empty,
+        string.Empty,
         1500m,
         DateTime.Now,
         "encrypted",
@@ -369,8 +369,8 @@ public class DocumentServiceTests
         "12345678000195",
         "Empresa Teste",
         "SP",
-        null,
-        null,
+        string.Empty,
+        string.Empty,
         1500m,
         DateTime.Now,
         "encrypted",

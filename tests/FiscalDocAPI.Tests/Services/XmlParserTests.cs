@@ -139,7 +139,7 @@ public class XmlParserTests
         var ex = Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await _parser.ParseXmlAsync(stream, "encrypted", "hash")
         );
-        ex.Message.Should().Contain("Tipo de documento fiscal não reconhecido");
+        ex!.Message.Should().Contain("Tipo de documento fiscal não reconhecido");
     }
 
     [Test]
