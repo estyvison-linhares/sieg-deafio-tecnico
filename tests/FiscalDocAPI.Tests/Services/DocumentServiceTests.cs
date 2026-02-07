@@ -82,7 +82,7 @@ public class DocumentServiceTests
     result.Should().NotBeNull();
     result.DocumentId.Should().Be(document.Id);
     result.IsNewDocument.Should().BeTrue();
-    result.Message.Should().Be("Documento processado com sucesso");
+    result.Message.Should().Be("Document processed successfully");
 
     _repositoryMock.Verify(x => x.AddAsync(It.IsAny<FiscalDocument>()), Times.Once);
     _repositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
@@ -123,7 +123,7 @@ public class DocumentServiceTests
     result.Should().NotBeNull();
     result.DocumentId.Should().Be(existingDoc.Id);
     result.IsNewDocument.Should().BeFalse();
-    result.Message.Should().Be("Documento já existente (idempotência)");
+    result.Message.Should().Be("Document already exists (idempotency)");
 
     _repositoryMock.Verify(x => x.AddAsync(It.IsAny<FiscalDocument>()), Times.Never);
     _messagePublisherMock.Verify(x => x.PublishAsync(It.IsAny<DocumentProcessedEvent>(), It.IsAny<string>()), Times.Never);
@@ -182,7 +182,7 @@ public class DocumentServiceTests
     result.Should().NotBeNull();
     result.DocumentId.Should().Be(existingDoc.Id);
     result.IsNewDocument.Should().BeFalse();
-    result.Message.Should().Be("Documento já existente (idempotência)");
+    result.Message.Should().Be("Document already exists (idempotency)");
 
     _repositoryMock.Verify(x => x.AddAsync(It.IsAny<FiscalDocument>()), Times.Never);
     _messagePublisherMock.Verify(x => x.PublishAsync(It.IsAny<DocumentProcessedEvent>(), It.IsAny<string>()), Times.Never);

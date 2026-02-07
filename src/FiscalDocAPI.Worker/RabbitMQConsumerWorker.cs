@@ -22,7 +22,7 @@ public class RabbitMQConsumerWorker : BackgroundService
         _logger = logger;
         _configuration = configuration;
 
-        // Política de retry com backoff exponencial
+        // Retry policy with exponential backoff
         _retryPolicy = Policy
             .Handle<Exception>()
             .WaitAndRetryAsync(
@@ -31,14 +31,14 @@ public class RabbitMQConsumerWorker : BackgroundService
                 onRetry: (exception, timeSpan, retryCount, context) =>
                 {
                     _logger.LogWarning(
-                        "Tentativa {RetryCount} falhou. Aguardando {TimeSpan} antes de tentar novamente. Erro: {Error}",
+                        "Attempt {RetryCount} failed. Waiting {TimeSpan} before retrying. Error: {Error}",
                         retryCount, timeSpan, exception.Message);
                 });
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("RabbitMQ Consumer Worker iniciando...");
+        _logger.LogInformation("RabbitMQ Consumer Worker starting...");
 
         await _retryPolicy.ExecuteAsync(async () =>
         {
@@ -46,9 +46,9 @@ public class RabbitMQConsumerWorker : BackgroundService
             await Task.CompletedTask;
         });
 
-        if (_channel == null)
+        if (_channel  == null)
         {
-            _logger.LogError("Não foi possível inicializar o canal RabbitMQ");
+            _logger.LogError("Failed to initialize RabbitMQ channel");
             return;
         }
 
@@ -131,15 +131,15 @@ public class RabbitMQConsumerWorker : BackgroundService
                 await ProcessDocumentEventAsync(message, stoppingToken);
             });
 
-            // Confirmar processamento
+            // Acknowledge processed message
             _channel?.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
-            _logger.LogInformation("Mensagem processada com sucesso");
+            _logger.LogInformation("Message processed successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao processar mensagem após todas as tentativas");
+            _logger.LogError(ex, "Error processing message after all retry attempts");
             
-            // Rejeitar mensagem e enviar para DLQ (se configurado) ou reprocessar
+            // Reject message and send to DLQ (if configured) or reprocess
             _channel?.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
         }
     }
@@ -150,23 +150,23 @@ public class RabbitMQConsumerWorker : BackgroundService
         
         if (evt == null)
         {
-            _logger.LogWarning("Não foi possível desserializar a mensagem");
+            _logger.LogWarning("Unable to deserialize message");
             return;
         }
 
         _logger.LogInformation(
-            "Processando documento: {DocumentId}, Tipo: {DocumentType}, CNPJ: {Cnpj}, Valor: {Value}",
+            "Processing document: {DocumentId}, Type: {DocumentType}, CNPJ: {Cnpj}, Value: {Value}",
             evt.DocumentId, evt.DocumentType, evt.EmitterCnpj, evt.TotalValue);
 
         var summary = $"""
-            📄 Novo documento processado!
+            📄 New document processed!
             
             ID: {evt.DocumentId}
-            Tipo: {evt.DocumentType}
-            CNPJ Emissor: {FormatCnpj(evt.EmitterCnpj)}
-            Chave: {evt.DocumentKey}
-            Valor Total: R$ {evt.TotalValue:N2}
-            Data de Processamento: {evt.ProcessedAt:dd/MM/yyyy HH:mm:ss}
+            Type: {evt.DocumentType}
+            Emitter CNPJ: {FormatCnpj(evt.EmitterCnpj)}
+            Key: {evt.DocumentKey}
+            Total Value: R$ {evt.TotalValue:N2}
+            Processing Date: {evt.ProcessedAt:dd/MM/yyyy HH:mm:ss}
             """;
 
         _logger.LogInformation("Resumo gerado:\n{Summary}", summary);

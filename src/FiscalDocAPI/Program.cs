@@ -14,10 +14,10 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Fiscal Document API",
         Version = "v1",
-        Description = "API para processamento de documentos fiscais XML (NFe, CTe, NFSe) - Clean Architecture",
+        Description = "API for processing fiscal XML documents (NFe, CTe, NFSe) - Clean Architecture",
         Contact = new Microsoft.OpenApi.Models.OpenApiContact
         {
-            Name = "SIEG - Sistema de Gestão Fiscal"
+            Name = "SIEG - Fiscal Management System"
         }
     });
 });
@@ -51,7 +51,7 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
-// Aplicar migrations automaticamente
+// Apply migrations automatically
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<FiscalDocContext>();
@@ -62,11 +62,11 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Não foi possível aplicar migrations automaticamente. Execute 'dotnet ef database update' manualmente.");
+        logger.LogWarning(ex, "Unable to apply migrations automatically. Run 'dotnet ef database update' manually.");
     }
 }
 
 app.Run();
 
-// Para testes de integração
+// For integration tests
 public partial class Program { }
