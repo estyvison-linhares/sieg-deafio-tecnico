@@ -12,6 +12,7 @@ API REST para processamento de documentos fiscais XML (NFe, CTe, NFSe) desenvolv
 - ✅ **Resiliência** com Polly (retry com backoff exponencial)
 - ✅ **API REST completa** com operações CRUD
 - ✅ **Paginação e filtros** avançados (data, CNPJ, UF, tipo)
+- ✅ **Logging estruturado** com ILogger para auditoria e debugging
 - ✅ **Documentação Swagger**
 - ✅ **Testes unitários e de integração** com NUnit
 - ✅ **Docker e Docker Compose** para fácil execução
@@ -87,6 +88,26 @@ if (xmlFile == null || xmlFile.Length == 0) return BadRequest(...);
   - Status: `ProcessingStatus.Pending`, `ProcessingStatus.Processed`
   - Mensagens: `ValidationMessages.DocumentNotFound`
   - Routing Keys: `RoutingKeys.DocumentProcessed`
+
+**Logging com ILogger<T>**
+- **Injeção de `ILogger<T>`** em todas as classes de serviço via DI
+- Logs estruturados em diferentes níveis:
+  - `LogInformation`: Operações bem-sucedidas, eventos importantes
+  - `LogWarning`: Idempotência detectada, retry policies
+  - `LogError`: Exceções, falhas no processamento
+- Exemplos práticos no código:
+```csharp
+// DocumentService.cs
+_logger.LogInformation("New document {Id} created successfully.", document.Id);
+_logger.LogInformation("Document with hash {Hash} already exists. Skipping.", xmlHash);
+
+// XmlParser.cs
+_logger.LogError(ex, "Error processing XML");
+
+// RabbitMQConsumerWorker.cs
+_logger.LogWarning("Attempt {RetryCount} failed. Waiting {TimeSpan} before retrying.");
+```
+- Benefícios: Facilita debugging, auditoria, monitoramento em produção
 
 ### Estrutura do Projeto
 
@@ -327,6 +348,7 @@ O Consumer implementa:
 - ✅ Queries otimizadas com EF Core
 - ✅ Async/await em todas as operações I/O
 - ✅ Connection pooling do SQL Server
+- ✅ Logging estruturado com ILogger<T> em todos os serviços
 - ✅ Caching potencial (pode adicionar Redis se necessário)
 
 ## 🧭 Melhorias Futuras
