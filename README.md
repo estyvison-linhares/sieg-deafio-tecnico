@@ -65,6 +65,7 @@ O projeto aplica extensivamente princípios de código limpo e SOLID:
 - **Constants**: `AppConstants.cs` centraliza valores (paginação, status, mensagens, routing keys)
 - **Logging**: `ILogger<T>` injetado, logs estruturados para debugging/auditoria
 - **AutoMapper**: Elimina ~30 linhas de boilerplate/método; mappings `FiscalDocument` → `DocumentSummaryDto`/`DocumentDetailDto`
+- **Proteção XXE**: XML parsing seguro com `XmlReaderSettings` (`DtdProcessing.Prohibit`, `XmlResolver = null`)
 
 ### Estrutura do Projeto
 
@@ -95,10 +96,17 @@ SIEG/
 │   └── FiscalDocAPI.Worker/           # Worker para consumo RabbitMQ
 │       └── RabbitMQConsumerWorker.cs
 ├── tests/
-│   └── FiscalDocAPI.Tests/            # Testes unitários
-│       ├── Controllers/
-│       ├── Services/
-│       └── ...
+│   ├── FiscalDocAPI.Tests/            # Testes unitários (38 testes)
+│   │   ├── Controllers/
+│   │   ├── Services/
+│   │   └── ...
+│   ├── FiscalDocAPI.IntegrationTests/ # Testes de integração (7 testes)
+│   │   ├── DocumentsControllerIntegrationTests.cs
+│   │   ├── WebApplicationFactoryFixture.cs
+│   │   └── TestData/
+│   └── LoadTests/                     # Testes de carga (NBomber)
+│       ├── DocumentLoadTests.cs
+│       └── Samples/
 └── README.md                          # Este arquivo
 ```
 
@@ -196,9 +204,10 @@ dotnet run --project src/FiscalDocAPI.Worker/FiscalDocAPI.Worker.csproj
 
 ## 🧪 Executando os Testes
 
+### Testes Unitários (38 testes)
 ```bash
-# Todos os testes
-dotnet test
+# Todos os testes unitários
+dotnet test tests/FiscalDocAPI.Tests/FiscalDocAPI.Tests.csproj
 
 # Com detalhes
 dotnet test --logger "console;verbosity=detailed"
@@ -207,6 +216,112 @@ dotnet test --logger "console;verbosity=detailed"
 dotnet test --filter "FullyQualifiedName~FiscalDocAPI.Tests.Services"
 dotnet test --filter "FullyQualifiedName~FiscalDocAPI.Tests.Controllers"
 ```
+
+### Testes de Integração (7 testes)
+
+Testes end-to-end que validam a integração entre camadas usando `WebApplicationFactory` e banco InMemory.
+
+**Cenários testados:**
+1. ✅ Upload de XML válido
+2. ✅ Upload sem arquivo (BadRequest)
+3. ✅ Listagem paginada de documentos
+4. ✅ Consulta documento por ID existente
+5. ✅ Consulta documento por ID inexistente (NotFound)
+6. ✅ Exclusão de documento
+7. ✅ Health check endpoint
+
+**Executar:**
+```bash
+dotnet test tests/FiscalDocAPI.IntegrationTests/FiscalDocAPI.IntegrationTests.csproj
+```
+
+**Tecnologias:**
+- `Microsoft.AspNetCore.Mvc.Testing` - WebApplicationFactory
+- `EntityFrameworkCore.InMemory` - Banco de dados em memória para testes
+- `FluentAssertions` - Asserções fluentes
+- `NUnit` - Framework de testes
+
+### Testes de Carga (NBomber)
+
+Testes de performance e resiliência com **NBomber** para validar comportamento sob carga.
+
+#### 📊 Cenários Testados
+
+**1️⃣ Ingestão de XML (POST)**
+- **Endpoint**: `POST /api/documents/upload`
+- **Carga**: 10 requisições/segundo por 30 segundos
+- **Métricas**:
+  - Throughput (req/s)
+  - Latência (p50, p75, p95, p99)
+  - Taxa de erro
+- **Observação**: Valida idempotência sob carga
+
+**2️⃣ Consulta Paginada (GET)**
+- **Endpoint**: `GET /api/documents?page={page}&pageSize=10`
+- **Carga**: 50 requisições/segundo por 30 segundos
+- **Métricas**:
+  - Tempo de resposta
+  - Throughput
+  - Taxa de sucesso
+- **Observação**: Valida índices e filtros
+
+#### 🏃 Como Executar
+
+**Pré-requisitos:**
+1. API rodando em `http://localhost:5000`
+2. Banco de dados configurado
+3. RabbitMQ rodando (para processamento completo)
+
+**Executar os testes:**
+```bash
+# Da raiz do projeto
+cd tests/LoadTests
+dotnet run
+```
+
+Ou direto:
+```bash
+dotnet run --project tests/LoadTests/LoadTests.csproj
+```
+
+#### 📈 Relatórios
+
+Após a execução, os relatórios são gerados em:
+- `tests/LoadTests/Reports/fiscal_api_load_test.html` (visualização gráfica)
+- `tests/LoadTests/Reports/fiscal_api_load_test.md` (markdown)
+
+Abra o HTML no navegador para análise detalhada:
+- Gráficos de latência
+- Throughput ao longo do tempo
+- Distribuição de status codes
+- Percentis (p50, p75, p95, p99)
+
+#### 🎯 Resultados Esperados
+
+**Ingestão (POST):**
+- ✅ Latência p95 < 500ms
+- ✅ Taxa de sucesso > 95%
+- ✅ Idempotência funcionando (mesmo XML não duplica)
+
+**Consulta (GET):**
+- ✅ Latência p95 < 200ms
+- ✅ Taxa de sucesso > 99%
+- ✅ Índices otimizando consultas
+
+#### 🔧 Personalização
+
+Edite `DocumentLoadTests.cs` para ajustar:
+- Taxa de requisições (`rate`)
+- Duração do teste (`during`)
+- Páginas consultadas (randomização)
+- XMLs utilizados (pasta `Samples/`)
+
+#### 💡 Dicas
+
+1. **Warm-up**: Execute uma vez para warm-up do sistema antes de testes definitivos
+2. **Monitoramento**: Observe CPU, memória e I/O durante os testes
+3. **Baseline**: Execute sem carga primeiro para estabelecer baseline
+4. **Isolamento**: Rode em ambiente sem outras cargas para resultados precisos
 
 ## 📝 Endpoints da API
 
@@ -325,6 +440,7 @@ O Consumer implementa:
 - ✅ Connection pooling do SQL Server
 - ✅ Logging estruturado com ILogger<T> em todos os serviços
 - ✅ AutoMapper para eliminar mapeamento manual de DTOs
+- ✅ Testes de carga com NBomber (ingestão e consulta)
 - ✅ Caching potencial (pode adicionar Redis se necessário)
 
 ## 🧭 Melhorias Futuras
@@ -342,7 +458,6 @@ O Consumer implementa:
 - [ ] **Azure Blob Storage** para armazenar XMLs grandes
 - [ ] **Rate limiting** com AspNetCoreRateLimit
 - [ ] **OpenTelemetry** para observabilidade
-- [ ] **Testes de carga** com NBomber ou k6
 - [ ] **Testes de arquitetura** com NetArchTest
 - [ ] **CI/CD** com GitHub Actions
 - [ ] **Authentication/Authorization** com JWT
