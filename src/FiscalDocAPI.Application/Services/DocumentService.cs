@@ -1,5 +1,6 @@
 using FiscalDocAPI.Application.DTOs;
 using FiscalDocAPI.Application.Interfaces;
+using FiscalDocAPI.Domain.Constants;
 using FiscalDocAPI.Domain.Entities;
 using FiscalDocAPI.Domain.Events;
 using FiscalDocAPI.Domain.Interfaces;
@@ -97,7 +98,7 @@ public class DocumentService : IDocumentService
             EmitterCnpj = document.EmitterCnpj,
             TotalValue = document.TotalValue
         };
-        await _messagePublisher.PublishAsync(evt, "fiscal.document.processed");
+        await _messagePublisher.PublishAsync(evt, AppConstants.RoutingKeys.DocumentProcessed);
     }
 
     private static UploadXmlResponse CreateDuplicateResponse(Guid documentId)
