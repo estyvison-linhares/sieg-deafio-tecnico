@@ -10,6 +10,7 @@ API REST para processamento de documentos fiscais XML (NFe, CTe, NFSe) desenvolv
 - ✅ **RabbitMQ** para mensageria assíncrona
 - ✅ **Worker service** para consumo de eventos
 - ✅ **Resiliência** com Polly (retry com backoff exponencial)
+- ✅ **Nack e descarte** de mensagens com erro após todas as tentativas
 - ✅ **API REST completa** com operações CRUD
 - ✅ **Paginação e filtros** avançados (data, CNPJ, UF, tipo)
 - ✅ **Logging estruturado** com ILogger para auditoria e debugging
@@ -98,7 +99,6 @@ SIEG/
 │       ├── Controllers/
 │       ├── Services/
 │       └── ...
-├── nuget.config                       # Configuração fontes NuGet
 └── README.md                          # Este arquivo
 ```
 
@@ -303,10 +303,10 @@ Se o mesmo XML for enviado múltiplas vezes, o sistema:
 
 O Consumer implementa:
 
-- **Retry com backoff exponencial** usando Polly
+- **Retry com backoff exponencial** usando Polly (5 tentativas)
 - **Auto-recovery** em caso de queda de conexão
 - **QoS** configurado para processar 1 mensagem por vez
-- **Nack** para mensagens com erro após todas as tentativas
+- **BasicNack** para rejeitar mensagens com erro após todas as tentativas (sem requeue)
 
 ## 📈 Performance
 
@@ -331,6 +331,7 @@ O Consumer implementa:
 
 ### Sugeridas para tempo adicional:
 - [ ] **Docker e Docker Compose**: Containerização da aplicação completa
+- [ ] **Dead Letter Queue (DLQ)**: Para mensagens que falharam após todas as tentativas de retry
 - [ ] **CQRS (Command Query Responsibility Segregation)**: Separar operações de escrita (Commands) e leitura (Queries) com MediatR
   - Commands: Upload, Update, Delete de documentos
   - Queries: Listagens otimizadas com projections específicas
