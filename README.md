@@ -116,8 +116,9 @@ docker-compose exec api dotnet ef database update
 ```
 
 **4. Acesse a API:**
-- API: https://localhost:5001 (ou http://localhost:5000, redireciona para HTTPS)
-- Swagger: https://localhost:5001/swagger
+- API: http://localhost:5000
+- Swagger: http://localhost:5000/swagger
+- Health Check: http://localhost:5000/health
 - RabbitMQ Management: http://localhost:15672 (guest/guest)
 
 ### Opção 2: Sem Docker
@@ -155,24 +156,40 @@ Edite `src/FiscalDocAPI/appsettings.json`:
 **4. Aplique as migrations:**
 ```bash
 cd src/FiscalDocAPI
-dotnet ef migrations add InitialCreate
 dotnet ef database update
+cd ../..
 ```
 
 **5. Execute a API:**
 ```bash
+# A partir da raiz do projeto (pasta SIEG)
+cd src/FiscalDocAPI
 dotnet run
+```
+
+Ou direto:
+```bash
+dotnet run --project src/FiscalDocAPI/FiscalDocAPI.csproj
 ```
 
 **6. Execute o Worker (em outro terminal):**
 ```bash
+# A partir da raiz do projeto (pasta SIEG)
 cd src/FiscalDocAPI.Worker
 dotnet run
 ```
 
+Ou direto:
+```bash
+dotnet run --project src/FiscalDocAPI.Worker/FiscalDocAPI.Worker.csproj
+```
+
 **7. Acesse a API:**
-- API: https://localhost:5001 (ou http://localhost:5000, redireciona para HTTPS)
-- Swagger: https://localhost:5001/swagger
+- API: http://localhost:5000
+- Swagger: http://localhost:5000/swagger
+- Health Check: http://localhost:5000/health
+
+> **Nota:** HTTPS está desabilitado para desenvolvimento local. Use HTTP (porta 5000).
 
 ## 🧪 Executando os Testes
 
