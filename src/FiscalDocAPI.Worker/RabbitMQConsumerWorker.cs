@@ -22,7 +22,6 @@ public class RabbitMQConsumerWorker : BackgroundService
         _logger = logger;
         _configuration = configuration;
 
-        // Retry policy with exponential backoff
         _retryPolicy = Policy
             .Handle<Exception>()
             .WaitAndRetryAsync(
@@ -46,7 +45,7 @@ public class RabbitMQConsumerWorker : BackgroundService
             await Task.CompletedTask;
         });
 
-        if (_channel  == null)
+        if (_channel == null)
         {
             _logger.LogError("Failed to initialize RabbitMQ channel");
             return;
@@ -63,7 +62,6 @@ public class RabbitMQConsumerWorker : BackgroundService
 
         _logger.LogInformation("Worker aguardando mensagens na fila: {Queue}", queueName);
 
-        // Mantém o worker rodando
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000, stoppingToken);
@@ -89,14 +87,12 @@ public class RabbitMQConsumerWorker : BackgroundService
         var queueName = _configuration["RabbitMQ:QueueName"] ?? "fiscal-documents";
         var routingKey = _configuration["RabbitMQ:RoutingKey"] ?? "fiscal.document.#";
 
-        // Declarar exchange
         _channel.ExchangeDeclare(
             exchange: exchangeName,
             type: ExchangeType.Topic,
             durable: true,
             autoDelete: false);
 
-        // Declarar fila
         _channel.QueueDeclare(
             queue: queueName,
             durable: true,
@@ -104,13 +100,11 @@ public class RabbitMQConsumerWorker : BackgroundService
             autoDelete: false,
             arguments: null);
 
-        // Fazer binding
         _channel.QueueBind(
             queue: queueName,
             exchange: exchangeName,
             routingKey: routingKey);
 
-        // Configurar QoS para processar uma mensagem por vez
         _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
 
         _logger.LogInformation("RabbitMQ inicializado. Exchange: {Exchange}, Queue: {Queue}", exchangeName, queueName);
@@ -122,24 +116,21 @@ public class RabbitMQConsumerWorker : BackgroundService
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            
+
             _logger.LogInformation("Mensagem recebida: {Message}", message);
 
-            // Processar com retry
             await _retryPolicy.ExecuteAsync(async () =>
             {
                 await ProcessDocumentEventAsync(message, stoppingToken);
             });
 
-            // Acknowledge processed message
             _channel?.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
             _logger.LogInformation("Message processed successfully");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing message after all retry attempts");
-            
-            // Reject message and send to DLQ (if configured) or reprocess
+
             _channel?.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
         }
     }
@@ -147,7 +138,7 @@ public class RabbitMQConsumerWorker : BackgroundService
     private async Task ProcessDocumentEventAsync(string message, CancellationToken stoppingToken)
     {
         var evt = JsonSerializer.Deserialize<DocumentProcessedEvent>(message);
-        
+
         if (evt == null)
         {
             _logger.LogWarning("Unable to deserialize message");
@@ -174,7 +165,7 @@ public class RabbitMQConsumerWorker : BackgroundService
         await Task.Delay(100, stoppingToken);
     }
 
-    private string FormatCnpj(string cnpj)
+    private static string FormatCnpj(string cnpj)
     {
         if (string.IsNullOrWhiteSpace(cnpj) || cnpj.Length != 14)
             return cnpj;
