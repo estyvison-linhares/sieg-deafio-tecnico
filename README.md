@@ -447,22 +447,21 @@ O Consumer implementa:
 
 ## 🧭 Melhorias Futuras
 
-### Sugeridas para tempo adicional:
-- [ ] **Docker e Docker Compose**: Containerização da aplicação completa
-- [ ] **Dead Letter Queue (DLQ)**: Para mensagens que falharam após todas as tentativas de retry
-- [ ] **CQRS (Command Query Responsibility Segregation)**: Separar operações de escrita (Commands) e leitura (Queries) com MediatR
-  - Commands: Upload, Update, Delete de documentos
-  - Queries: Listagens otimizadas com projections específicas
-  - Benefícios: Performance, escalabilidade independente, models otimizados
-- [ ] **Event Sourcing**: Armazenar histórico completo de mudanças nos documentos
-- [ ] **Elasticsearch** para busca full-text
-- [ ] **Redis** para caching de consultas frequentes
-- [ ] **Azure Blob Storage** para armazenar XMLs grandes
-- [ ] **Rate limiting** com AspNetCoreRateLimit
-- [ ] **OpenTelemetry** para observabilidade
-- [ ] **Testes de arquitetura** com NetArchTest
-- [ ] **CI/CD** com GitHub Actions
-- [ ] **Authentication/Authorization** com JWT
+### 🔴 Críticas (Necessárias para Produção)
+- [ ] **Authentication/Authorization (JWT)**: Segurança de endpoints com tokens JWT
+- [ ] **Docker e Docker Compose**: Containerização completa (API + Worker + SQL + RabbitMQ)
+- [ ] **Rate Limiting**: Proteção contra abuso com AspNetCoreRateLimit
+- [ ] **Dead Letter Queue (DLQ)**: Tratamento de mensagens que falharam após todas as tentativas
+- [ ] **CI/CD**: Pipeline automatizado com GitHub Actions
+
+### 🟡 Importantes (Para Escala e Performance)
+- [ ] **Redis**: Caching distribuído para consultas frequentes
+- [ ] **OpenTelemetry**: Observabilidade e distributed tracing
+- [ ] **Azure Blob Storage**: Armazenamento de XMLs grandes (> 1MB)
+- [ ] **Testes de arquitetura**: NetArchTest para validar Clean Architecture
+
+### 🟢 Opcionais (Caso haja necessidade específica)
+- [ ] **Elasticsearch**: Busca full-text em XMLs (se houver requisito de busca avançada)
 
 ## 📚 Documentação Adicional
 
