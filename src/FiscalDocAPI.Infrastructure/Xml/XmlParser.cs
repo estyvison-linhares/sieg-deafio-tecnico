@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml;
 using System.Xml.Linq;
 using FiscalDocAPI.Application.Interfaces;
 using FiscalDocAPI.Domain.Entities;
@@ -24,7 +25,7 @@ public class XmlParser : IXmlParser
         
         try
         {
-            var xdoc = XDocument.Parse(xmlContent);
+            var xdoc = ParseXmlSecurely(xmlContent);
             var root = xdoc.Root;
 
             string docType;
@@ -140,5 +141,19 @@ public class XmlParser : IXmlParser
             return date;
         
         return DateTime.UtcNow;
+    }
+
+    private static XDocument ParseXmlSecurely(string xmlContent)
+    {
+        var settings = new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null,
+            MaxCharactersFromEntities = 1024
+        };
+
+        using var stringReader = new StringReader(xmlContent);
+        using var xmlReader = XmlReader.Create(stringReader, settings);
+        return XDocument.Load(xmlReader);
     }
 }

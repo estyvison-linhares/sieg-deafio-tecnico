@@ -1,0 +1,15 @@
+# NBomber reports
+Reports/
+*.html
+*.md
+!README.md
+
+# Build outputs
+bin/
+obj/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
