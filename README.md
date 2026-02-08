@@ -155,9 +155,8 @@ Edite `src/FiscalDocAPI/appsettings.json`:
 
 **4. Aplique as migrations:**
 ```bash
-cd src/FiscalDocAPI
-dotnet ef database update
-cd ../..
+# Da raiz do projeto
+dotnet ef database update --project src/FiscalDocAPI.Infrastructure --startup-project src/FiscalDocAPI
 ```
 
 **5. Execute a API:**
