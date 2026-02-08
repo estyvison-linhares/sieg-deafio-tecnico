@@ -1,73 +1,70 @@
-# 📄 Fiscal Document API
+# Fiscal Document API
 
-API REST para processamento de documentos fiscais XML (NFe, CTe, NFSe) desenvolvida em **ASP.NET Core 8.0**.
+API para ingestão e consulta de documentos fiscais (NFe, CTe, NFSe). Feita em ASP.NET Core 8 com Clean Architecture.
 
-## 🎯 Funcionalidades
+## Funcionalidades
 
-- ✅ **Upload e processamento de XMLs fiscais** (NFe, CTe, NFSe)
-- ✅ **Armazenamento seguro** com criptografia de dados sensíveis
-- ✅ **Garantia de idempotência** - previne duplicação de documentos
-- ✅ **RabbitMQ** para mensageria assíncrona
-- ✅ **Worker service** para consumo de eventos
-- ✅ **Resiliência** com Polly (retry com backoff exponencial)
-- ✅ **Nack e descarte** de mensagens com erro após todas as tentativas
-- ✅ **API REST completa** com operações CRUD
-- ✅ **Paginação e filtros** avançados (data, CNPJ, UF, tipo)
-- ✅ **Logging estruturado** com ILogger para auditoria e debugging
-- ✅ **Documentação Swagger**
-- ✅ **Testes unitários** com NUnit (38 testes)
-- ✅ **Testes de integração** com WebApplicationFactory (7 testes)
-- ✅ **Testes de carga** com NBomber (2 cenários de performance)
+- Upload e processamento de XMLs fiscais
+- Armazenamento com criptografia AES
+- Idempotência (previne duplicação via hash SHA256)
+- Mensageria assíncrona com RabbitMQ
+- Worker service para consumo de eventos
+- Retry automático com Polly (backoff exponencial)
+- API REST com CRUD completo
+- Paginação e filtros (data, CNPJ, UF, tipo)
+- Logging estruturado (ILogger)
+- Swagger
+- 38 testes unitários + 7 testes de integração + 2 cenários de carga (NBomber)
 
-## 🏗️ Arquitetura
+## Arquitetura
+
+### Por que Clean Architecture?
+
+Escolhi Clean Architecture porque já trabalhei com ela em projetos anteriores e resolvia bem os problemas desse desafio:
+
+- **Testabilidade**: Consigo mockar qualquer dependência (DB, RabbitMQ, file system)
+- **Independência de frameworks**: Domain não sabe que existe EF Core ou ASP.NET
+- **Manutenibilidade**: Mudanças ficam isoladas em suas camadas
+
+**Trade-off**: Mais arquivos e abstrações, mas vale pela facilidade de testar e evoluir.
+
+**Camadas:**
+- **Domain**: Entidades e contratos (zero dependências externas)
+- **Application**: Lógica de negócio e orquestração
+- **Infrastructure**: Implementações concretas (SQL, RabbitMQ, XML)
+- **API**: Controllers e configuração
 
 ### Decisões Técnicas
 
-**1. Banco de Dados: SQL Server**
-- ✅ Suporte robusto para transações ACID
-- ✅ Índices otimizados para consultas por data, CNPJ, UF
-- ✅ Entity Framework Core para migrations e ORM
-- ✅ Constraint UNIQUE na chave do documento para garantir unicidade
+**SQL Server**
 
-**2. Mensageria: RabbitMQ**
-- ✅ Mensageria confiável e escalável
-- ✅ Topic Exchange para flexibilidade no roteamento
-- ✅ Persistência de mensagens
-- ✅ Dead Letter Queue para tratamento de falhas
+Precisava de transações ACID e constraints para garantir unicidade. EF Core facilita migrations.
 
-**3. Segurança**
-- ✅ XML criptografado com AES antes de armazenar
-- ✅ Hash SHA256 para verificação de integridade e idempotência
-- ✅ Gitignore configurado para não vazar secrets
+Índices em: `DocumentKey` (UNIQUE), `XmlHash`, `EmitterCnpj`, `EmitterUF`, `IssueDate`.
 
-**4. Clean Architecture (Arquitetura em Camadas)**
-- ✅ **Domain Layer**: Entidades de negócio e interfaces (independente de frameworks)
-- ✅ **Application Layer**: Casos de uso, lógica de negócio e orquestração
-- ✅ **Infrastructure Layer**: Implementações concretas (BD, RabbitMQ, XML parsing)
-- ✅ **API Layer**: Controllers, DTOs, configuração e endpoints REST
+**RabbitMQ**
 
-**Benefícios da Clean Architecture:**
-- 🎯 **Separação de responsabilidades**: Cada camada tem um propósito claro
-- 🔄 **Testabilidade**: Fácil criar mocks e testar lógica isoladamente
-- 🔌 **Baixo acoplamento**: Mudanças em uma camada não afetam as outras
-- 📦 **Independência de frameworks**: Domínio não depende de EF Core ou ASP.NET
-- 🚀 **Manutenibilidade**: Código organizado facilita evolução do sistema
-- 🔁 **Inversão de dependência**: Camadas externas dependem das internas (DIP)
+Processamento assíncrono era requisito. RabbitMQ garante:
+- Mensagens persistidas (não se perdem)
+- Retry com backoff (Polly)
+- Topic Exchange (flexibilidade no roteamento)
 
-**5. Clean Code e SOLID**
+Considerei Kafka mas seria overkill pro volume esperado.
 
-O projeto aplica extensivamente princípios de código limpo e SOLID:
+**Segurança**
 
-**Single Responsibility Principle (SRP)**
-**Princípios aplicados:**
+- XMLs criptografados com AES-256 antes de salvar
+- Hash SHA256 para idempotência e integridade
+- Proteção XXE: `XmlReaderSettings` com `DtdProcessing.Prohibit`
 
-- **SRP**: `DocumentService` delega responsabilidades (`ReadXmlContentAsync`, `CheckIdempotencyByHashAsync`, `SaveDocumentAsync`, `PublishDocumentProcessedEventAsync`); `XmlParser` usa Extract Method pattern
-- **DIP**: Abstrações via interfaces (`IDocumentService`, `IXmlParser`, `IEncryptionService`, `IMessagePublisher`), injeção no construtor
-- **Guard Clauses**: Early returns em validações (`if (existingDoc == null) return null;`)
-- **Constants**: `AppConstants.cs` centraliza valores (paginação, status, mensagens, routing keys)
-- **Logging**: `ILogger<T>` injetado, logs estruturados para debugging/auditoria
-- **AutoMapper**: Elimina ~30 linhas de boilerplate/método; mappings `FiscalDocument` → `DocumentSummaryDto`/`DocumentDetailDto`
-- **Proteção XXE**: XML parsing seguro com `XmlReaderSettings` (`DtdProcessing.Prohibit`, `XmlResolver = null`)
+**Clean Code**
+
+Apliquei SOLID e padrões:
+- **SRP**: `DocumentService` delega em métodos privados
+- **DIP**: Tudo via interfaces injetadas
+- **Guard Clauses**: Early returns
+- **AutoMapper**: Elimina boilerplate de mapeamento manual
+- **Constants**: Valores centralizados em `AppConstants.cs`
 
 ### Estrutura do Projeto
 
@@ -112,7 +109,7 @@ SIEG/
 └── README.md                          # Este arquivo
 ```
 
-## 🚀 Como Rodar Localmente
+## Como Rodar
 
 ### Pré-requisitos
 
@@ -196,138 +193,62 @@ Ou direto:
 dotnet run --project src/FiscalDocAPI.Worker/FiscalDocAPI.Worker.csproj
 ```
 
-**8. Acesse a API:**
+**8. Acesse:**
 - API: http://localhost:5000
 - Swagger: http://localhost:5000/swagger
-- Health Check: http://localhost:5000/health
-- RabbitMQ Management: http://localhost:15672 (guest/guest)
+- Health: http://localhost:5000/health
+- RabbitMQ: http://localhost:15672 (guest/guest)
 
-> **Nota:** HTTPS está desabilitado para desenvolvimento local. Use HTTP (porta 5000).
+Nota: HTTPS desabilitado no dev local (só HTTP na porta 5000).
 
-## 🧪 Executando os Testes
+## Testes
 
-### Testes Unitários (38 testes)
+### Unitários (38 testes)
 ```bash
-# Todos os testes unitários
+# Todos
 dotnet test tests/FiscalDocAPI.Tests/FiscalDocAPI.Tests.csproj
 
-# Com detalhes
-dotnet test --logger "console;verbosity=detailed"
-
-# Testes por categoria
+# Por categoria
 dotnet test --filter "FullyQualifiedName~FiscalDocAPI.Tests.Services"
-dotnet test --filter "FullyQualifiedName~FiscalDocAPI.Tests.Controllers"
 ```
 
-### Testes de Integração (7 testes)
+### Integração (7 testes)
 
-Testes end-to-end que validam a integração entre camadas usando `WebApplicationFactory` e banco InMemory.
+Testes end-to-end com `WebApplicationFactory` e InMemory database.
 
-**Cenários testados:**
-1. ✅ Upload de XML válido
-2. ✅ Upload sem arquivo (BadRequest)
-3. ✅ Listagem paginada de documentos
-4. ✅ Consulta documento por ID existente
-5. ✅ Consulta documento por ID inexistente (NotFound)
-6. ✅ Exclusão de documento
-7. ✅ Health check endpoint
+**Cenários:** Upload válido, validação de erros, listagem paginada, busca por ID, deleção, health check.
 
-**Executar:**
 ```bash
 dotnet test tests/FiscalDocAPI.IntegrationTests/FiscalDocAPI.IntegrationTests.csproj
 ```
 
-**Tecnologias:**
-- `Microsoft.AspNetCore.Mvc.Testing` - WebApplicationFactory
-- `EntityFrameworkCore.InMemory` - Banco de dados em memória para testes
-- `FluentAssertions` - Asserções fluentes
-- `NUnit` - Framework de testes
+### Carga (NBomber)
 
-### Testes de Carga (NBomber)
+**Cenário 1 - Ingestão:**
+- `POST /api/documents/upload`
+- 10 req/s por 30s
+- Valida idempotência sob carga
 
-Testes de performance e resiliência com **NBomber** para validar comportamento sob carga.
+**Cenário 2 - Consulta:**
+- `GET /api/documents?page={page}&pageSize=10`
+- 50 req/s por 30s
+- Valida performance dos índices
 
-#### 📊 Cenários Testados
-
-**1️⃣ Ingestão de XML (POST)**
-- **Endpoint**: `POST /api/documents/upload`
-- **Carga**: 10 requisições/segundo por 30 segundos
-- **Métricas**:
-  - Throughput (req/s)
-  - Latência (p50, p75, p95, p99)
-  - Taxa de erro
-- **Observação**: Valida idempotência sob carga
-
-**2️⃣ Consulta Paginada (GET)**
-- **Endpoint**: `GET /api/documents?page={page}&pageSize=10`
-- **Carga**: 50 requisições/segundo por 30 segundos
-- **Métricas**:
-  - Tempo de resposta
-  - Throughput
-  - Taxa de sucesso
-- **Observação**: Valida índices e filtros
-
-#### 🏃 Como Executar
-
-**Pré-requisitos:**
-1. API rodando em `http://localhost:5000`
-2. Banco de dados configurado
-3. RabbitMQ rodando (para processamento completo)
-
-**Executar os testes:**
+**Executar:**
 ```bash
-# Da raiz do projeto
 cd tests/LoadTests
 dotnet run
 ```
 
-Ou direto:
-```bash
-dotnet run --project tests/LoadTests/LoadTests.csproj
-```
+Relatórios gerados em `tests/LoadTests/Reports/` (HTML + Markdown).
 
-#### 📈 Relatórios
+**Resultados esperados:**
+- Ingestão: p95 < 500ms, sucesso > 95%
+- Consulta: p95 < 200ms, sucesso > 99%
 
-Após a execução, os relatórios são gerados em:
-- `tests/LoadTests/Reports/fiscal_api_load_test.html` (visualização gráfica)
-- `tests/LoadTests/Reports/fiscal_api_load_test.md` (markdown)
+## Endpoints
 
-Abra o HTML no navegador para análise detalhada:
-- Gráficos de latência
-- Throughput ao longo do tempo
-- Distribuição de status codes
-- Percentis (p50, p75, p95, p99)
-
-#### 🎯 Resultados Esperados
-
-**Ingestão (POST):**
-- ✅ Latência p95 < 500ms
-- ✅ Taxa de sucesso > 95%
-- ✅ Idempotência funcionando (mesmo XML não duplica)
-
-**Consulta (GET):**
-- ✅ Latência p95 < 200ms
-- ✅ Taxa de sucesso > 99%
-- ✅ Índices otimizando consultas
-
-#### 🔧 Personalização
-
-Edite `DocumentLoadTests.cs` para ajustar:
-- Taxa de requisições (`rate`)
-- Duração do teste (`during`)
-- Páginas consultadas (randomização)
-- XMLs utilizados (pasta `Samples/`)
-
-#### 💡 Dicas
-
-1. **Warm-up**: Execute uma vez para warm-up do sistema antes de testes definitivos
-2. **Monitoramento**: Observe CPU, memória e I/O durante os testes
-3. **Baseline**: Execute sem carga primeiro para estabelecer baseline
-4. **Isolamento**: Rode em ambiente sem outras cargas para resultados precisos
-
-## 📝 Endpoints da API
-
-### 1. Upload de XML
+### Upload XML
 ```http
 POST /api/documents/upload
 Content-Type: multipart/form-data
@@ -336,7 +257,7 @@ Form Data:
   xmlFile: [arquivo.xml]
 ```
 
-**Resposta:**
+Resposta:
 ```json
 {
   "documentId": "guid",
@@ -345,151 +266,69 @@ Form Data:
 }
 ```
 
-### 2. Listar Documentos (com paginação e filtros)
+### Listar Documentos
 ```http
-GET /api/documents?page=1&pageSize=10&cnpj=12345678000190&uf=SP&startDate=2024-01-01&endDate=2024-12-31&documentType=NFe
+GET /api/documents?page=1&pageSize=10&cnpj=12345678000190&uf=SP&startDate=2024-01-01
 ```
 
-**Resposta:**
-```json
-{
-  "items": [...],
-  "page": 1,
-  "pageSize": 10,
-  "totalCount": 100,
-  "totalPages": 10
-}
-```
-
-### 3. Consultar Documento Específico
+### Consultar / Atualizar / Excluir
 ```http
 GET /api/documents/{id}
-```
-
-### 4. Atualizar Documento
-```http
 PUT /api/documents/{id}
-Content-Type: application/json
-
-{
-  "emitterName": "Novo Nome",
-  "processingStatus": "Processed",
-  "additionalData": "{\"custom\": \"data\"}"
-}
-```
-
-### 5. Excluir Documento
-```http
 DELETE /api/documents/{id}
 ```
 
-## 🔒 Segurança e Dados Sensíveis
+## Segurança
 
-### Criptografia
-- XMLs são criptografados usando **AES-256** antes de serem salvos
-- Chaves de criptografia devem ser armazenadas em **Azure Key Vault** ou similar em produção
+**Criptografia:** XMLs são criptografados com AES-256 antes de salvar.
 
-### Configuração de Secrets (Produção)
-
-**Não commite secrets!** Use variáveis de ambiente ou um gerenciador de secrets:
+**Produção:** Use Azure Key Vault ou User Secrets. Não commite secrets!
 
 ```bash
-# Azure Key Vault
-dotnet add package Azure.Extensions.AspNetCore.Configuration.Secrets
-
-# User Secrets (desenvolvimento)
 dotnet user-secrets init
-dotnet user-secrets set "Encryption:Key" "sua-chave-32-caracteres-aqui!!"
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "sua-connection-string"
+dotnet user-secrets set "Encryption:Key" "sua-chave-32-caracteres"
 ```
 
-## 📊 Idempotência
+## Idempotência
 
-A API garante idempotência através de:
+Garantida por:
+- Hash SHA256 do XML completo
+- Chave única do documento (constraint UNIQUE no DB)
 
-1. **Hash SHA256** do conteúdo XML completo
-2. **Chave única** do documento (chave de acesso NFe/CTe)
-3. Índices únicos no banco de dados
+Se enviar o mesmo XML 2x: retorna o documento existente, não duplica.
 
-Se o mesmo XML for enviado múltiplas vezes, o sistema:
-- ✅ Retorna o documento existente
-- ✅ Não duplica dados
-- ✅ Não gera eventos duplicados no RabbitMQ
+## Resiliência
 
-## 🔄 Resiliência no RabbitMQ
+RabbitMQ consumer tem:
+- Retry com backoff exponencial (Polly, 5 tentativas)
+- Auto-recovery em quedas de conexão
+- QoS configurado (1 msg por vez)
+- BasicNack após esgotar retries (sem requeue)
 
-O Consumer implementa:
+## Performance
 
-- **Retry com backoff exponencial** usando Polly (5 tentativas)
-- **Auto-recovery** em caso de queda de conexão
-- **QoS** configurado para processar 1 mensagem por vez
-- **BasicNack** para rejeitar mensagens com erro após todas as tentativas (sem requeue)
+Índices: `DocumentKey` (UNIQUE), `XmlHash`, `EmitterCnpj`, `EmitterUF`, `IssueDate`.
 
-## 📈 Performance
+Práticas: paginação, async/await, connection pooling, AutoMapper, logging estruturado.
 
-### Índices Otimizados
-- `DocumentKey` (UNIQUE)
-- `XmlHash`
-- `EmitterCnpj`
-- `EmitterUF`
-- `IssueDate`
-- `CreatedAt`
+## Melhorias Futuras
 
-### Boas Práticas Implementadas
-- ✅ Paginação em todas as listagens
-- ✅ Queries otimizadas com EF Core
-- ✅ Async/await em todas as operações I/O
-- ✅ Connection pooling do SQL Server
-- ✅ Logging estruturado com ILogger<T> em todos os serviços
-- ✅ AutoMapper para eliminar mapeamento manual de DTOs
-- ✅ Testes de carga com NBomber (ingestão e consulta)
-- ✅ Caching potencial (pode adicionar Redis se necessário)
+### Críticas (Produção)
+- [ ] Authentication/Authorization (JWT)
+- [ ] Docker Compose (API + Worker + SQL + RabbitMQ)
+- [ ] Rate Limiting
+- [ ] Dead Letter Queue com reprocessamento
+- [ ] CI/CD pipeline
 
-## 🧭 Melhorias Futuras
+### Importantes (Escala)
+- [ ] Redis para caching
+- [ ] OpenTelemetry (distributed tracing)
+- [ ] Azure Blob Storage (XMLs > 1MB)
+- [ ] NetArchTest (validação de arquitetura)
 
-### 🔴 Críticas (Necessárias para Produção)
-- [ ] **Authentication/Authorization (JWT)**: Segurança de endpoints com tokens JWT
-- [ ] **Docker e Docker Compose**: Containerização completa (API + Worker + SQL + RabbitMQ)
-- [ ] **Rate Limiting**: Proteção contra abuso com AspNetCoreRateLimit
-- [ ] **Dead Letter Queue (DLQ)**: Tratamento de mensagens que falharam após todas as tentativas
-- [ ] **CI/CD**: Pipeline automatizado com GitHub Actions
-
-### 🟡 Importantes (Para Escala e Performance)
-- [ ] **Redis**: Caching distribuído para consultas frequentes
-- [ ] **OpenTelemetry**: Observabilidade e distributed tracing
-- [ ] **Azure Blob Storage**: Armazenamento de XMLs grandes (> 1MB)
-- [ ] **Testes de arquitetura**: NetArchTest para validar Clean Architecture
-
-### 🟢 Opcionais (Caso haja necessidade específica)
-- [ ] **Elasticsearch**: Busca full-text em XMLs (se houver requisito de busca avançada)
-
-## 📚 Documentação Adicional
-
-### Swagger
-Acesse `/swagger` para documentação interativa completa da API.
-
-## 🤝 Como Contribuir
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto é licenciado sob a [MIT License](LICENSE).
-
-## 👨‍💻 Autor
-
-Desenvolvido como parte do desafio técnico SIEG.
+### Opcionais
+- [ ] Elasticsearch (se precisar busca full-text)
 
 ---
 
-**⚠️ IMPORTANTE:** Este é um projeto de demonstração. Para uso em produção:
-- Configure secrets adequadamente (Azure Key Vault)
-- Implemente autenticação e autorização
-- Configure SSL/TLS em produção
-- Ajuste resource limits nos containers
-- Implemente backups do banco de dados
-- Configure monitoring e alertas
+**Desenvolvido para o desafio técnico SIEG.**
