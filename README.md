@@ -14,8 +14,7 @@ API REST para processamento de documentos fiscais XML (NFe, CTe, NFSe) desenvolv
 - ✅ **Paginação e filtros** avançados (data, CNPJ, UF, tipo)
 - ✅ **Logging estruturado** com ILogger para auditoria e debugging
 - ✅ **Documentação Swagger**
-- ✅ **Testes unitários e de integração** com NUnit
-- ✅ **Docker e Docker Compose** para fácil execução
+- ✅ **Testes unitários** com NUnit (38 testes)
 
 ## 🏗️ Arquitetura
 
@@ -71,23 +70,36 @@ O projeto aplica extensivamente princípios de código limpo e SOLID:
 ```
 SIEG/
 ├── src/
-│   ├── FiscalDocAPI/              # API REST principal
-│   │   ├── Controllers/           # Endpoints REST
-│   │   ├── Data/                  # DbContext
-│   │   ├── DTOs/                  # Data Transfer Objects
-│   │   ├── Models/                # Entidades do domínio
-│   │   ├── Services/              # Lógica de negócio
-│   │   └── Program.cs             # Configuração da aplicação
-│   └── FiscalDocAPI.Worker/       # Worker para consumo RabbitMQ
+│   ├── FiscalDocAPI.Domain/           # Camada de Domínio
+│   │   ├── Constants/                 # Constantes de negócio
+│   │   ├── Entities/                  # Entidades de domínio
+│   │   ├── Events/                    # Eventos de domínio
+│   │   └── Interfaces/                # Contratos de repositórios
+│   ├── FiscalDocAPI.Application/      # Camada de Aplicação
+│   │   ├── DTOs/                      # Data Transfer Objects
+│   │   ├── Interfaces/                # Contratos de serviços
+│   │   ├── Mappings/                  # Profiles do AutoMapper
+│   │   ├── Services/                  # Lógica de negócio
+│   │   └── DependencyInjection.cs     # Configuração de DI
+│   ├── FiscalDocAPI.Infrastructure/   # Camada de Infraestrutura
+│   │   ├── Messaging/                 # RabbitMQ Publisher
+│   │   ├── Migrations/                # Migrations EF Core
+│   │   ├── Persistence/               # DbContext e Repositories
+│   │   ├── Security/                  # Criptografia
+│   │   ├── Xml/                       # XML Parser
+│   │   └── DependencyInjection.cs     # Configuração de DI
+│   ├── FiscalDocAPI/                  # Camada de API
+│   │   ├── Controllers/               # Endpoints REST
+│   │   └── Program.cs                 # Configuração da aplicação
+│   └── FiscalDocAPI.Worker/           # Worker para consumo RabbitMQ
 │       └── RabbitMQConsumerWorker.cs
 ├── tests/
-│   └── FiscalDocAPI.Tests/        # Testes unitários e integração
+│   └── FiscalDocAPI.Tests/            # Testes unitários
 │       ├── Controllers/
 │       ├── Services/
-│       └── Integration/
-├── docker-compose.yml             # Orquestração de containers
-├── Dockerfile                     # Imagem da API
-└── README.md                      # Este arquivo
+│       └── ...
+├── nuget.config                       # Configuração fontes NuGet
+└── README.md                          # Este arquivo
 ```
 
 ## 🚀 Como Rodar Localmente
@@ -95,9 +107,10 @@ SIEG/
 ### Pré-requisitos
 
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop) (opcional, mas recomendado)
+- SQL Server (local ou Docker)
+- RabbitMQ (local ou Docker)
 
-### Opção 1: Com Docker (Recomendado)
+### Configuração
 
 **1. Clone o repositório:**
 ```bash
@@ -105,30 +118,20 @@ git clone <repository-url>
 cd SIEG
 ```
 
-**2. Inicie os containers:**
+**2. Inicie o SQL Server:**
+
+Opção 1 - Com Docker:
 ```bash
-docker-compose up -d
+docker run -d --name sqlserver \
+  -e 'ACCEPT_EULA=Y' \
+  -e 'SA_PASSWORD=YourStrong@Passw0rd' \
+  -p 1433:1433 \
+  mcr.microsoft.com/mssql/server:2022-latest
 ```
 
-**3. Aplique as migrations do banco de dados:**
-```bash
-docker-compose exec api dotnet ef database update
-```
+Opção 2 - SQL Server local instalado
 
-**4. Acesse a API:**
-- API: http://localhost:5000
-- Swagger: http://localhost:5000/swagger
-- Health Check: http://localhost:5000/health
-- RabbitMQ Management: http://localhost:15672 (guest/guest)
-
-### Opção 2: Sem Docker
-
-**1. Inicie o SQL Server:**
-- Instale o SQL Server localmente
-- Ou use uma instância na nuvem
-- Atualize a connection string em `appsettings.json`
-
-**2. Inicie o RabbitMQ:**
+**3. Inicie o RabbitMQ:**
 ```bash
 # Com Docker
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
@@ -136,7 +139,7 @@ docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 # Ou instale localmente: https://www.rabbitmq.com/download.html
 ```
 
-**3. Configure a aplicação:**
+**4. Configure a aplicação:**
 
 Edite `src/FiscalDocAPI/appsettings.json`:
 ```json
@@ -153,13 +156,13 @@ Edite `src/FiscalDocAPI/appsettings.json`:
 }
 ```
 
-**4. Aplique as migrations:**
+**5. Aplique as migrations:**
 ```bash
 # Da raiz do projeto
 dotnet ef database update --project src/FiscalDocAPI.Infrastructure --startup-project src/FiscalDocAPI
 ```
 
-**5. Execute a API:**
+**6. Execute a API:**
 ```bash
 # A partir da raiz do projeto (pasta SIEG)
 cd src/FiscalDocAPI
@@ -171,7 +174,7 @@ Ou direto:
 dotnet run --project src/FiscalDocAPI/FiscalDocAPI.csproj
 ```
 
-**6. Execute o Worker (em outro terminal):**
+**7. Execute o Worker (em outro terminal):**
 ```bash
 # A partir da raiz do projeto (pasta SIEG)
 cd src/FiscalDocAPI.Worker
@@ -183,10 +186,11 @@ Ou direto:
 dotnet run --project src/FiscalDocAPI.Worker/FiscalDocAPI.Worker.csproj
 ```
 
-**7. Acesse a API:**
+**8. Acesse a API:**
 - API: http://localhost:5000
 - Swagger: http://localhost:5000/swagger
 - Health Check: http://localhost:5000/health
+- RabbitMQ Management: http://localhost:15672 (guest/guest)
 
 > **Nota:** HTTPS está desabilitado para desenvolvimento local. Use HTTP (porta 5000).
 
@@ -199,11 +203,9 @@ dotnet test
 # Com detalhes
 dotnet test --logger "console;verbosity=detailed"
 
-# Somente testes unitários
+# Testes por categoria
 dotnet test --filter "FullyQualifiedName~FiscalDocAPI.Tests.Services"
-
-# Somente testes de integração
-dotnet test --filter "FullyQualifiedName~FiscalDocAPI.Tests.Integration"
+dotnet test --filter "FullyQualifiedName~FiscalDocAPI.Tests.Controllers"
 ```
 
 ## 📝 Endpoints da API
@@ -328,6 +330,7 @@ O Consumer implementa:
 ## 🧭 Melhorias Futuras
 
 ### Sugeridas para tempo adicional:
+- [ ] **Docker e Docker Compose**: Containerização da aplicação completa
 - [ ] **CQRS (Command Query Responsibility Segregation)**: Separar operações de escrita (Commands) e leitura (Queries) com MediatR
   - Commands: Upload, Update, Delete de documentos
   - Queries: Listagens otimizadas com projections específicas
@@ -337,7 +340,6 @@ O Consumer implementa:
 - [ ] **Redis** para caching de consultas frequentes
 - [ ] **Azure Blob Storage** para armazenar XMLs grandes
 - [ ] **Rate limiting** com AspNetCoreRateLimit
-- [ ] **Health checks** para monitoramento
 - [ ] **OpenTelemetry** para observabilidade
 - [ ] **Testes de carga** com NBomber ou k6
 - [ ] **Testes de arquitetura** com NetArchTest
@@ -348,13 +350,6 @@ O Consumer implementa:
 
 ### Swagger
 Acesse `/swagger` para documentação interativa completa da API.
-
-### Exemplos de XML
-
-Veja a pasta `samples/` para exemplos de XMLs de teste:
-- `nfe-example.xml`
-- `cte-example.xml`
-- `nfse-example.xml`
 
 ## 🤝 Como Contribuir
 
