@@ -16,6 +16,8 @@ API REST para processamento de documentos fiscais XML (NFe, CTe, NFSe) desenvolv
 - ✅ **Logging estruturado** com ILogger para auditoria e debugging
 - ✅ **Documentação Swagger**
 - ✅ **Testes unitários** com NUnit (38 testes)
+- ✅ **Testes de integração** com WebApplicationFactory (7 testes)
+- ✅ **Testes de carga** com NBomber (2 cenários de performance)
 
 ## 🏗️ Arquitetura
 
