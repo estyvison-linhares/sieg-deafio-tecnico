@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using FiscalDocAPI.Application.DTOs;
 using FiscalDocAPI.Application.Interfaces;
+using FiscalDocAPI.Domain.Constants;
 
 namespace FiscalDocAPI.API.Controllers;
 
@@ -21,12 +22,12 @@ public class DocumentsController(
   {
     if (xmlFile == null || xmlFile.Length == 0)
     {
-      return BadRequest(new { error = "XML file not provided or empty" });
+      return BadRequest(new { error = AppConstants.ValidationMessages.XmlFileRequired });
     }
 
     if (!xmlFile.FileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
     {
-      return BadRequest(new { error = "File must be of type XML" });
+      return BadRequest(new { error = AppConstants.ValidationMessages.InvalidXmlExtension });
     }
 
     try
@@ -60,8 +61,10 @@ public class DocumentsController(
       Cnpj = cnpj,
       UF = uf,
       DocumentType = documentType,
-      Page = page < 1 ? 1 : page,
-      PageSize = pageSize < 1 || pageSize > 100 ? 10 : pageSize
+      Page = page < AppConstants.Pagination.MinPageSize ? AppConstants.Pagination.DefaultPage : page,
+      PageSize = pageSize < AppConstants.Pagination.MinPageSize || pageSize > AppConstants.Pagination.MaxPageSize 
+        ? AppConstants.Pagination.DefaultPageSize 
+        : pageSize
     };
 
     var result = await _documentService.GetDocumentsAsync(request);
@@ -77,7 +80,7 @@ public class DocumentsController(
 
     if (document == null)
     {
-      return NotFound(new { error = "Document not found" });
+      return NotFound(new { error = AppConstants.ValidationMessages.DocumentNotFound });
     }
 
     return Ok(document);
@@ -92,10 +95,10 @@ public class DocumentsController(
 
     if (!success)
     {
-      return NotFound(new { error = "Document not found" });
+      return NotFound(new { error = AppConstants.ValidationMessages.DocumentNotFound });
     }
 
-    return Ok(new { message = "Document updated successfully" });
+    return Ok(new { message = AppConstants.ValidationMessages.DocumentUpdatedSuccessfully });
   }
 
   [HttpDelete("{id}")]
@@ -107,9 +110,9 @@ public class DocumentsController(
 
     if (!success)
     {
-      return NotFound(new { error = "Document not found" });
+      return NotFound(new { error = AppConstants.ValidationMessages.DocumentNotFound });
     }
 
-    return Ok(new { message = "Document deleted successfully" });
+    return Ok(new { message = AppConstants.ValidationMessages.DocumentDeletedSuccessfully });
   }
 }

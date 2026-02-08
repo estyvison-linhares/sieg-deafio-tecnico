@@ -12,6 +12,7 @@ API REST para processamento de documentos fiscais XML (NFe, CTe, NFSe) desenvolv
 - ✅ **Resiliência** com Polly (retry com backoff exponencial)
 - ✅ **API REST completa** com operações CRUD
 - ✅ **Paginação e filtros** avançados (data, CNPJ, UF, tipo)
+- ✅ **Logging estruturado** com ILogger para auditoria e debugging
 - ✅ **Documentação Swagger**
 - ✅ **Testes unitários e de integração** com NUnit
 - ✅ **Docker e Docker Compose** para fácil execução
@@ -36,6 +37,77 @@ API REST para processamento de documentos fiscais XML (NFe, CTe, NFSe) desenvolv
 - ✅ XML criptografado com AES antes de armazenar
 - ✅ Hash SHA256 para verificação de integridade e idempotência
 - ✅ Gitignore configurado para não vazar secrets
+
+**4. Clean Architecture (Arquitetura em Camadas)**
+- ✅ **Domain Layer**: Entidades de negócio e interfaces (independente de frameworks)
+- ✅ **Application Layer**: Casos de uso, lógica de negócio e orquestração
+- ✅ **Infrastructure Layer**: Implementações concretas (BD, RabbitMQ, XML parsing)
+- ✅ **API Layer**: Controllers, DTOs, configuração e endpoints REST
+
+**Benefícios da Clean Architecture:**
+- 🎯 **Separação de responsabilidades**: Cada camada tem um propósito claro
+- 🔄 **Testabilidade**: Fácil criar mocks e testar lógica isoladamente
+- 🔌 **Baixo acoplamento**: Mudanças em uma camada não afetam as outras
+- 📦 **Independência de frameworks**: Domínio não depende de EF Core ou ASP.NET
+- 🚀 **Manutenibilidade**: Código organizado facilita evolução do sistema
+- 🔁 **Inversão de dependência**: Camadas externas dependem das internas (DIP)
+
+**5. Clean Code e SOLID**
+
+O projeto aplica extensivamente princípios de código limpo e SOLID:
+
+**Single Responsibility Principle (SRP)**
+- `DocumentService.ProcessXmlUploadAsync()` orquestra o fluxo, mas **delega** responsabilidades:
+  - `ReadXmlContentAsync()` - leitura do XML
+  - `CheckIdempotencyByHashAsync()` - validação de idempotência
+  - `CheckDuplicationByKeyAsync()` - validação de duplicação
+  - `SaveDocumentAsync()` - persistência
+  - `PublishDocumentProcessedEventAsync()` - publicação de eventos
+- `XmlParser` usa **Extract Method** pattern com métodos privados focados:
+  - `ExtractDocumentKey()`, `ExtractEmitterData()`, `ExtractRecipientData()`, etc.
+
+**Dependency Inversion Principle (DIP)**  
+- Todas as dependências são abstraídas em **interfaces** (`IDocumentService`, `IXmlParser`, `IEncryptionService`, `IMessagePublisher`)
+- Injeção de dependências via construtor em todas as classes
+- Controllers dependem de abstrações, não de implementações concretas
+
+**Guard Clauses e Early Returns**
+- Evita `if-else` aninhados, retornando cedo em validações:
+```csharp
+if (existingDoc == null) return null;
+if (xmlFile == null || xmlFile.Length == 0) return BadRequest(...);
+```
+
+**Naming Conventions**
+- Métodos com nomes descritivos: `ProcessXmlUploadAsync`, `CheckIdempotencyByHashAsync`
+- Variáveis autoexplicativas: `xmlContent`, `encryptedXml`, `documentKey`
+
+**Constants Over Magic Values**
+- Constantes centralizadas em `AppConstants.cs` substituem valores hardcoded:
+  - Paginação: `MaxPageSize = 100`, `DefaultPageSize = 10`
+  - Status: `ProcessingStatus.Pending`, `ProcessingStatus.Processed`
+  - Mensagens: `ValidationMessages.DocumentNotFound`
+  - Routing Keys: `RoutingKeys.DocumentProcessed`
+
+**Logging com ILogger<T>**
+- **Injeção de `ILogger<T>`** em todas as classes de serviço via DI
+- Logs estruturados em diferentes níveis:
+  - `LogInformation`: Operações bem-sucedidas, eventos importantes
+  - `LogWarning`: Idempotência detectada, retry policies
+  - `LogError`: Exceções, falhas no processamento
+- Exemplos práticos no código:
+```csharp
+// DocumentService.cs
+_logger.LogInformation("New document {Id} created successfully.", document.Id);
+_logger.LogInformation("Document with hash {Hash} already exists. Skipping.", xmlHash);
+
+// XmlParser.cs
+_logger.LogError(ex, "Error processing XML");
+
+// RabbitMQConsumerWorker.cs
+_logger.LogWarning("Attempt {RetryCount} failed. Waiting {TimeSpan} before retrying.");
+```
+- Benefícios: Facilita debugging, auditoria, monitoramento em produção
 
 ### Estrutura do Projeto
 
@@ -87,8 +159,8 @@ docker-compose exec api dotnet ef database update
 ```
 
 **4. Acesse a API:**
-- API: http://localhost:5000
-- Swagger: http://localhost:5000/swagger
+- API: https://localhost:5001 (ou http://localhost:5000, redireciona para HTTPS)
+- Swagger: https://localhost:5001/swagger
 - RabbitMQ Management: http://localhost:15672 (guest/guest)
 
 ### Opção 2: Sem Docker
@@ -141,9 +213,9 @@ cd src/FiscalDocAPI.Worker
 dotnet run
 ```
 
-**7. Acesse:**
-- API: https://localhost:7001
-- Swagger: https://localhost:7001/swagger
+**7. Acesse a API:**
+- API: https://localhost:5001 (ou http://localhost:5000, redireciona para HTTPS)
+- Swagger: https://localhost:5001/swagger
 
 ## 🧪 Executando os Testes
 
@@ -276,11 +348,17 @@ O Consumer implementa:
 - ✅ Queries otimizadas com EF Core
 - ✅ Async/await em todas as operações I/O
 - ✅ Connection pooling do SQL Server
+- ✅ Logging estruturado com ILogger<T> em todos os serviços
 - ✅ Caching potencial (pode adicionar Redis se necessário)
 
 ## 🧭 Melhorias Futuras
 
 ### Sugeridas para tempo adicional:
+- [ ] **CQRS (Command Query Responsibility Segregation)**: Separar operações de escrita (Commands) e leitura (Queries) com MediatR
+  - Commands: Upload, Update, Delete de documentos
+  - Queries: Listagens otimizadas com projections específicas
+  - Benefícios: Performance, escalabilidade independente, models otimizados
+- [ ] **Event Sourcing**: Armazenar histórico completo de mudanças nos documentos
 - [ ] **Elasticsearch** para busca full-text
 - [ ] **Redis** para caching de consultas frequentes
 - [ ] **Azure Blob Storage** para armazenar XMLs grandes

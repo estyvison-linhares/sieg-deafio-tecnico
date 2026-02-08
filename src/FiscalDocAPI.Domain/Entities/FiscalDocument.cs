@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using FiscalDocAPI.Domain.Constants;
 
 namespace FiscalDocAPI.Domain.Entities;
 
@@ -75,7 +76,7 @@ public class FiscalDocument
             IssueDate = issueDate,
             XmlContent = xmlContent,
             XmlHash = xmlHash,
-            ProcessingStatus = "Pending"
+            ProcessingStatus = AppConstants.ProcessingStatus.Pending
         };
 
         return document;
