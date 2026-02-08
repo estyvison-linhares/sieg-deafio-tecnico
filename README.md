@@ -57,57 +57,14 @@ API REST para processamento de documentos fiscais XML (NFe, CTe, NFSe) desenvolv
 O projeto aplica extensivamente princípios de código limpo e SOLID:
 
 **Single Responsibility Principle (SRP)**
-- `DocumentService.ProcessXmlUploadAsync()` orquestra o fluxo, mas **delega** responsabilidades:
-  - `ReadXmlContentAsync()` - leitura do XML
-  - `CheckIdempotencyByHashAsync()` - validação de idempotência
-  - `CheckDuplicationByKeyAsync()` - validação de duplicação
-  - `SaveDocumentAsync()` - persistência
-  - `PublishDocumentProcessedEventAsync()` - publicação de eventos
-- `XmlParser` usa **Extract Method** pattern com métodos privados focados:
-  - `ExtractDocumentKey()`, `ExtractEmitterData()`, `ExtractRecipientData()`, etc.
+**Princípios aplicados:**
 
-**Dependency Inversion Principle (DIP)**  
-- Todas as dependências são abstraídas em **interfaces** (`IDocumentService`, `IXmlParser`, `IEncryptionService`, `IMessagePublisher`)
-- Injeção de dependências via construtor em todas as classes
-- Controllers dependem de abstrações, não de implementações concretas
-
-**Guard Clauses e Early Returns**
-- Evita `if-else` aninhados, retornando cedo em validações:
-```csharp
-if (existingDoc == null) return null;
-if (xmlFile == null || xmlFile.Length == 0) return BadRequest(...);
-```
-
-**Naming Conventions**
-- Métodos com nomes descritivos: `ProcessXmlUploadAsync`, `CheckIdempotencyByHashAsync`
-- Variáveis autoexplicativas: `xmlContent`, `encryptedXml`, `documentKey`
-
-**Constants Over Magic Values**
-- Constantes centralizadas em `AppConstants.cs` substituem valores hardcoded:
-  - Paginação: `MaxPageSize = 100`, `DefaultPageSize = 10`
-  - Status: `ProcessingStatus.Pending`, `ProcessingStatus.Processed`
-  - Mensagens: `ValidationMessages.DocumentNotFound`
-  - Routing Keys: `RoutingKeys.DocumentProcessed`
-
-**Logging com ILogger<T>**
-- **Injeção de `ILogger<T>`** em todas as classes de serviço via DI
-- Logs estruturados em diferentes níveis:
-  - `LogInformation`: Operações bem-sucedidas, eventos importantes
-  - `LogWarning`: Idempotência detectada, retry policies
-  - `LogError`: Exceções, falhas no processamento
-- Exemplos práticos no código:
-```csharp
-// DocumentService.cs
-_logger.LogInformation("New document {Id} created successfully.", document.Id);
-_logger.LogInformation("Document with hash {Hash} already exists. Skipping.", xmlHash);
-
-// XmlParser.cs
-_logger.LogError(ex, "Error processing XML");
-
-// RabbitMQConsumerWorker.cs
-_logger.LogWarning("Attempt {RetryCount} failed. Waiting {TimeSpan} before retrying.");
-```
-- Benefícios: Facilita debugging, auditoria, monitoramento em produção
+- **SRP**: `DocumentService` delega responsabilidades (`ReadXmlContentAsync`, `CheckIdempotencyByHashAsync`, `SaveDocumentAsync`, `PublishDocumentProcessedEventAsync`); `XmlParser` usa Extract Method pattern
+- **DIP**: Abstrações via interfaces (`IDocumentService`, `IXmlParser`, `IEncryptionService`, `IMessagePublisher`), injeção no construtor
+- **Guard Clauses**: Early returns em validações (`if (existingDoc == null) return null;`)
+- **Constants**: `AppConstants.cs` centraliza valores (paginação, status, mensagens, routing keys)
+- **Logging**: `ILogger<T>` injetado, logs estruturados para debugging/auditoria
+- **AutoMapper**: Elimina ~30 linhas de boilerplate/método; mappings `FiscalDocument` → `DocumentSummaryDto`/`DocumentDetailDto`
 
 ### Estrutura do Projeto
 
@@ -349,6 +306,7 @@ O Consumer implementa:
 - ✅ Async/await em todas as operações I/O
 - ✅ Connection pooling do SQL Server
 - ✅ Logging estruturado com ILogger<T> em todos os serviços
+- ✅ AutoMapper para eliminar mapeamento manual de DTOs
 - ✅ Caching potencial (pode adicionar Redis se necessário)
 
 ## 🧭 Melhorias Futuras

@@ -14,14 +14,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Database
         services.AddDbContext<FiscalDocContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-        // Repositories
         services.AddScoped<IFiscalDocumentRepository, FiscalDocumentRepository>();
 
-        // Services
         services.AddScoped<IXmlParser, XmlParser>();
         services.AddSingleton<IEncryptionService, EncryptionService>();
         services.AddSingleton<IMessagePublisher, RabbitMQPublisher>();

@@ -8,6 +8,7 @@ using FiscalDocAPI.Application.Interfaces;
 using FiscalDocAPI.Domain.Entities;
 using FiscalDocAPI.Domain.Events;
 using FiscalDocAPI.Domain.Interfaces;
+using AutoMapper;
 
 namespace FiscalDocAPI.Tests.Services;
 
@@ -19,6 +20,7 @@ public class DocumentServiceTests
   private Mock<IEncryptionService> _encryptionServiceMock = null!;
   private Mock<IMessagePublisher> _messagePublisherMock = null!;
   private Mock<ILogger<DocumentService>> _loggerMock = null!;
+  private Mock<IMapper> _mapperMock = null!;
   private DocumentService _service = null!;
 
   [SetUp]
@@ -29,13 +31,15 @@ public class DocumentServiceTests
     _encryptionServiceMock = new Mock<IEncryptionService>();
     _messagePublisherMock = new Mock<IMessagePublisher>();
     _loggerMock = new Mock<ILogger<DocumentService>>();
+    _mapperMock = new Mock<IMapper>();
 
     _service = new DocumentService(
         _repositoryMock.Object,
         _xmlParserMock.Object,
         _encryptionServiceMock.Object,
         _messagePublisherMock.Object,
-        _loggerMock.Object
+        _loggerMock.Object,
+        _mapperMock.Object
     );
   }
 
@@ -207,6 +211,13 @@ public class DocumentServiceTests
     _repositoryMock.Setup(x => x.GetPagedAsync(1, 10, null, null, null, null, null))
         .ReturnsAsync((documents, 2));
 
+    var expectedDtos = new List<DocumentSummaryDto>
+    {
+        new DocumentSummaryDto { DocumentId = documents[0].Id, DocumentType = "NFe", EmitterCnpj = "12345678000195", TotalValue = 1000m },
+        new DocumentSummaryDto { DocumentId = documents[1].Id, DocumentType = "CTe", EmitterCnpj = "98765432000198", TotalValue = 2000m }
+    };
+    _mapperMock.Setup(x => x.Map<List<DocumentSummaryDto>>(documents)).Returns(expectedDtos);
+
     // Act
     var result = await _service.GetDocumentsAsync(request);
 
@@ -237,6 +248,12 @@ public class DocumentServiceTests
 
     _repositoryMock.Setup(x => x.GetPagedAsync(1, 10, null, null, "12345678000195", "SP", "NFe"))
         .ReturnsAsync((new List<FiscalDocument> { document }, 1));
+
+    var expectedDtos = new List<DocumentSummaryDto>
+    {
+        new DocumentSummaryDto { DocumentId = document.Id, DocumentType = "NFe", EmitterCnpj = "12345678000195" }
+    };
+    _mapperMock.Setup(x => x.Map<List<DocumentSummaryDto>>(It.IsAny<List<FiscalDocument>>())).Returns(expectedDtos);
 
     // Act
     var result = await _service.GetDocumentsAsync(request);
@@ -269,6 +286,17 @@ public class DocumentServiceTests
     );
 
     _repositoryMock.Setup(x => x.GetByIdAsync(documentId)).ReturnsAsync(document);
+
+    var expectedDto = new DocumentDetailDto
+    {
+        Id = document.Id,
+        DocumentType = "NFe",
+        DocumentKey = "key1",
+        EmitterCnpj = "12345678000195",
+        EmitterName = "Empresa Teste",
+        TotalValue = 1500m
+    };
+    _mapperMock.Setup(x => x.Map<DocumentDetailDto>(document)).Returns(expectedDto);
 
     // Act
     var result = await _service.GetDocumentByIdAsync(documentId);

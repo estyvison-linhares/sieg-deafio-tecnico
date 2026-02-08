@@ -5,6 +5,7 @@ using FiscalDocAPI.Domain.Entities;
 using FiscalDocAPI.Domain.Events;
 using FiscalDocAPI.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using AutoMapper;
 
 namespace FiscalDocAPI.Application.Services;
 
@@ -15,19 +16,22 @@ public class DocumentService : IDocumentService
     private readonly IEncryptionService _encryptionService;
     private readonly IMessagePublisher _messagePublisher;
     private readonly ILogger<DocumentService> _logger;
+    private readonly IMapper _mapper;
 
     public DocumentService(
         IFiscalDocumentRepository repository,
         IXmlParser xmlParser,
         IEncryptionService encryptionService,
         IMessagePublisher messagePublisher,
-        ILogger<DocumentService> logger)
+        ILogger<DocumentService> logger,
+        IMapper mapper)
     {
         _repository = repository;
         _xmlParser = xmlParser;
         _encryptionService = encryptionService;
         _messagePublisher = messagePublisher;
         _logger = logger;
+        _mapper = mapper;
     }
 
     public async Task<UploadXmlResponse> ProcessXmlUploadAsync(Stream xmlStream, string fileName)
@@ -132,16 +136,7 @@ public class DocumentService : IDocumentService
             request.UF,
             request.DocumentType);
 
-        var dtos = items.Select(d => new DocumentSummaryDto
-        {
-            DocumentId = d.Id,
-            DocumentType = d.DocumentType,
-            EmitterCnpj = d.EmitterCnpj,
-            EmitterName = d.EmitterName,
-            TotalValue = d.TotalValue,
-            IssueDate = d.IssueDate,
-            CreatedAt = d.CreatedAt
-        }).ToList();
+        var dtos = _mapper.Map<List<DocumentSummaryDto>>(items);
 
         return new PagedResult<DocumentSummaryDto>
         {
@@ -158,23 +153,7 @@ public class DocumentService : IDocumentService
         if (document == null)
             return null;
 
-        return new DocumentDetailDto
-        {
-            Id = document.Id,
-            DocumentType = document.DocumentType,
-            DocumentKey = document.DocumentKey,
-            EmitterCnpj = document.EmitterCnpj,
-            EmitterName = document.EmitterName,
-            EmitterUF = document.EmitterUF,
-            RecipientCnpj = document.RecipientCnpj,
-            RecipientName = document.RecipientName,
-            TotalValue = document.TotalValue,
-            IssueDate = document.IssueDate,
-            CreatedAt = document.CreatedAt,
-            UpdatedAt = document.UpdatedAt,
-            ProcessingStatus = document.ProcessingStatus,
-            AdditionalData = document.AdditionalData
-        };
+        return _mapper.Map<DocumentDetailDto>(document);
     }
 
     public async Task<bool> UpdateDocumentAsync(Guid id, UpdateDocumentRequest request)
